@@ -10,7 +10,8 @@
  *
  */
 (function(window, undifined) {
-  var httphijack = {},
+
+  var httphijack = function(){},
     // 记录内联事件是否被扫描过的 hash map
     mCheckMap = {},
     // 记录内联事件是否被扫描过的id
@@ -107,7 +108,8 @@
 
           if (/xss/.test(node.src) || /xss/.test(node.innerHTML)) {
             node.parentNode.removeChild(node);
-            console.log('拦截可疑模块:', node);
+            console.log('拦截可疑静态脚本:', node);
+            hijackReport('拦截可疑静态脚本', node.src);
           }
         }
       });
@@ -253,12 +255,26 @@
     }
   }
 
+  /**
+   * 自定义上报 -- 替换页面中的 console.log()
+   * @param  {[String]} name  [拦截类型]
+   * @param  {[String]} value [拦截值]
+   * @return {[type]}   [description]
+   */
+  function hijackReport(name, value){
+    var img = document.createElement('img'),
+      hijackName = name,
+      hijackValue = value.toString();
+
+    // 上报
+    img.src = 'http://172.19.99.179:3002/report/?msg='+hijackName+'&value='+hijackValue;
+  }
+
   // 待完成：
-  // 自定义上报事件 -- 使用自定义上报事件替代页面中的 console.log
   // 添加黑白名单列表
 
   // 初始化方法
-  httphijack.prototype.init = function() {
+  httphijack.init = function() {
     // 触发内联事件拦截
     triggerIIE();
     // 进行静态脚本拦截
