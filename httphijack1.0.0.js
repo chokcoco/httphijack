@@ -139,6 +139,25 @@
   function resetCreateElement() {}
 
   /**
+   * 重写单个 window 窗口的 document.write 属性
+   * @param  {[BOM]} window [浏览器window对象]
+   * @return {[type]}       [description]
+   */
+  function resetDocumentWrite(window) {
+    var old_write = window.document.write;
+
+    window.document.write = function(string){
+      if (/xss/.test(string)) {
+        console.log('拦截可疑模块:', string);
+        return;
+      }
+
+      // 调用原始接口
+      old_write.apply(document, arguments);
+    }
+  }
+
+  /**
    * 重写单个 window 窗口的 setAttribute 属性
    * @param  {[BOM]} window [浏览器window对象]
    * @return {[type]} [description]
@@ -196,6 +215,8 @@
     function installHook(window) {
       // 重写单个 window 窗口的 setAttribute 属性
       resetSetAttribute(window);
+      // 重写单个 window 窗口的 document.Write 属性
+      resetDocumentWrite(window);
 
       // 监控当前环境的元素
       window.document.addEventListener('DOMNodeInserted', function(e) {
