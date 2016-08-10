@@ -267,7 +267,7 @@
     interceptionDynamicScript();
     // 锁住 apply 和 call
     lockCallAndApply();
-    // 对当前窗口及多重内嵌 iframe 进行 setAttribute 重写
+    // 对当前窗口及多重内嵌 iframe 进行 setAttribute | document.write 重写
     defenseIframe();
     // 对iframe劫持进行重定向
     redirectionIframeHijack();
