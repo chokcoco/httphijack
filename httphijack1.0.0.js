@@ -3,7 +3,7 @@
  * @QQ:308695699
  * @name httphijack 1.0.0
  * @update : 2016-08-10
- * @description 使用Javascript静态防御与动态防御实现前端防御http劫持及防御XSS攻击，并且对可疑攻击进行上报
+ * @description 使用Javascript实现前端防御http劫持及防御XSS攻击，并且对可疑攻击进行上报
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
  *
  * 1、使用方法：调用 httphijack.init()
