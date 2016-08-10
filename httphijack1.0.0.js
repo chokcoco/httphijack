@@ -20,7 +20,7 @@
    * @param  {[Number]} eventID   [内联事件id]
    * @return {[type]}             [description]
    */
-  function interceptionInlineEvent(eventName, eventID){
+  function interceptionInlineEvent(eventName, eventID) {
     var isClick = (eventName == 'onclick');
 
     /**
@@ -79,7 +79,7 @@
   }
 
   // 触发内联事件拦截
-  function triggerIIE(){
+  function triggerIIE() {
     var i = 0,
       obj = null;
 
@@ -95,7 +95,7 @@
    * 使用 MutationObserver 进行静态脚本拦截
    * @return {[type]} [description]
    */
-  function interceptionStaticScript(){
+  function interceptionStaticScript() {
     var observer = new MutationObserver(function(mutations) {
       mutations.forEach(function(mutation) {
 
@@ -122,7 +122,7 @@
    * 此处无法拦截，只能监测
    * @return {[type]} [description]
    */
-  function interceptionDynamicScript(){
+  function interceptionDynamicScript() {
     document.addEventListener('DOMNodeInserted', function(e) {
       var node = e.target;
 
@@ -134,14 +134,14 @@
   }
 
   // 重写 createElement
-  function resetCreateElement(){}
+  function resetCreateElement() {}
 
   /**
    * 重写单个 window 窗口的 setAttribute 属性
    * @param  {[BOM]} window [浏览器window对象]
    * @return {[type]} [description]
    */
-  function resetSetAttribute(window){
+  function resetSetAttribute(window) {
     // 保存原有接口
     var old_setAttribute = window.Element.prototype.setAttribute;
 
@@ -164,20 +164,20 @@
    * 使用 Object.defineProperty，锁住call和apply，使之无法被重写
    * @return {[type]} [description]
    */
-  function lockCallAndApply(){
+  function lockCallAndApply() {
     // 锁住 call
     Object.defineProperty(Function.prototype, 'call', {
-        value: Function.prototype.call,
-        writable: false,
-        configurable: false,
-        enumerable: true
+      value: Function.prototype.call,
+      writable: false,
+      configurable: false,
+      enumerable: true
     });
     // 锁住 apply
     Object.defineProperty(Function.prototype, 'apply', {
-        value: Function.prototype.apply,
-        writable: false,
-        configurable: false,
-        enumerable: true
+      value: Function.prototype.apply,
+      writable: false,
+      configurable: false,
+      enumerable: true
     });
   }
 
@@ -185,7 +185,7 @@
    * 使用 DOMNodeInserted 对生成的 iframe 页面进行监控，防止调用内部原生 setAttribute
    * @return {[type]} [description]
    */
-  function defenseIframe(){
+  function defenseIframe() {
     /**
      * 实现单个 window 窗口的 setAttribute保护
      * @param  {[BOM]} window [浏览器window对象]
@@ -234,7 +234,7 @@
   // 添加黑白名单列表
 
   // 初始化方法
-  httphijack.prototype.init = function (){
+  httphijack.prototype.init = function() {
     // 触发内联事件拦截
     triggerIIE();
     // 进行静态脚本拦截
