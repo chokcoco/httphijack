@@ -6,6 +6,8 @@
  * @description 使用Javascript静态防御与动态防御实现前端防御http劫持及防御XSS攻击，并且对可疑攻击进行上报
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
  *
+ * 1、使用方法：调用 httphijack.init()
+ *
  */
 (function(window, undifined) {
   var httphijack = {},
@@ -249,4 +251,6 @@
     // 对iframe劫持进行重定向
     redirectionIframeHijack();
   }
+
+  window.httphijack = httphijack;
 })(window);
