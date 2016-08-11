@@ -8,6 +8,16 @@
  *
  * 1、使用方法：调用 httphijack.init()
  *
+ * 2、建立自己的黑白名单、上报系统及接收后端
+ *
+ * 3、防范范围：
+ *    1）所有内联事件执行的代码
+ *    2）href 属性 javascript: 内嵌的代码
+ *    3）静态脚本文件内容
+ *    4）动态添加的脚本文件内容
+ *    5）document-write添加的内容
+ *    6）iframe嵌套
+ *
  */
 (function(window, undifined) {
 
@@ -25,7 +35,6 @@
    */
   function interceptionInlineEvent(eventName, eventID) {
     var isClick = (eventName == 'onclick');
-
     /**
      * 扫描元素是否存在内联事件
      * @param  {[DOM]} el [DOM元素]
@@ -57,18 +66,22 @@
 
       if (el[eventName]) {
         code = el.getAttribute(eventName);
-        if (code && /xss/.test(code)) {
+        if (code && /xss/i.test(code)) {
+          // 注销事件
           el[eventName] = null;
-          console.log('拦截可疑事件:' + code);
+          console.log('拦截可疑内联事件:' + code);
+          hijackReport('拦截可疑内联事件', code);
         }
       }
 
       // 扫描 <a href="javascript:"> 的脚本
       if (isClick && el.tagName == 'A' && el.protocol == 'javascript:') {
         var code = el.href.substr(11);
-        if (/xss/.test(code)) {
+        if (/xss/i.test(code)) {
+          // 注销代码
           el.href = 'javascript:void(0)';
           console.log('拦截可疑事件:' + code);
+          hijackReport('拦截可疑javascript:代码', code);
         }
       }
 
@@ -99,22 +112,33 @@
    * @return {[type]} [description]
    */
   function interceptionStaticScript() {
+    // 该构造函数用来实例化一个新的 Mutation 观察者对象
+    // Mutation 观察者对象能监听在某个范围内的 DOM 树变化
     var observer = new MutationObserver(function(mutations) {
       mutations.forEach(function(mutation) {
-
+        // 返回被添加的节点,或者为null.
         var nodes = mutation.addedNodes;
         for (var i = 0; i < nodes.length; i++) {
           var node = nodes[i];
-
-          if (/xss/.test(node.src) || /xss/.test(node.innerHTML)) {
-            node.parentNode.removeChild(node);
-            console.log('拦截可疑静态脚本:', node);
-            hijackReport('拦截可疑静态脚本', node.src);
+          if (/xss/i.test(node.src) || /xss/i.test(node.innerHTML)) {
+            try{
+              node.parentNode.removeChild(node);
+            }catch(e){
+              var isRemove = 1;
+            }
+            // 上报
+            if(!isRemove){
+              console.log('拦截可疑静态脚本:', node);
+              hijackReport('拦截可疑静态脚本', node.src);
+            }
           }
         }
       });
     });
 
+    // 传入目标节点和观察选项
+    // 如果 target 为 document 或者 document.documentElement
+    // 则当前文档中所有的节点添加与删除操作都会被观察到
     observer.observe(document, {
       subtree: true,
       childList: true
@@ -127,12 +151,13 @@
    * @return {[type]} [description]
    */
   function interceptionDynamicScript() {
+    // DOMNodeInserted 的执行时机早于 MutationObserver
     document.addEventListener('DOMNodeInserted', function(e) {
       var node = e.target;
-
-      if (/xss/.test(node.src) || /xss/.test(node.innerHTML)) {
+      if (/xss/i.test(node.src) || /xss/i.test(node.innerHTML)) {
         node.parentNode.removeChild(node);
-        console.log('拦截可疑模块:', node);
+        console.log('拦截可疑动态脚本:', node);
+        hijackReport('拦截可疑动态脚本', node.src);
       }
     }, true);
   }
@@ -149,8 +174,9 @@
     var old_write = window.document.write;
 
     window.document.write = function(string){
-      if (/xss/.test(string)) {
+      if (/xss/i.test(string)) {
         console.log('拦截可疑模块:', string);
+        hijackReport('拦截可疑document-write', string);
         return;
       }
 
@@ -173,35 +199,15 @@
 
       // 额外细节实现
       if (this.tagName == 'SCRIPT' && /^src$/i.test(name)) {
-        if (/xss/.test(value)) {
+        if (/xss/i.test(value)) {
           console.log('拦截可疑模块:', value);
+          hijackReport('拦截可疑setAttribute', string);
           return;
         }
       }
       // 调用原始接口
       old_setAttribute.apply(this, arguments);
     };
-  }
-
-  /**
-   * 使用 Object.defineProperty，锁住call和apply，使之无法被重写
-   * @return {[type]} [description]
-   */
-  function lockCallAndApply() {
-    // 锁住 call
-    Object.defineProperty(Function.prototype, 'call', {
-      value: Function.prototype.call,
-      writable: false,
-      configurable: false,
-      enumerable: true
-    });
-    // 锁住 apply
-    Object.defineProperty(Function.prototype, 'apply', {
-      value: Function.prototype.apply,
-      writable: false,
-      configurable: false,
-      enumerable: true
-    });
   }
 
   /**
@@ -236,10 +242,33 @@
   }
 
   /**
+   * 使用 Object.defineProperty，锁住call和apply，使之无法被重写
+   * @return {[type]} [description]
+   */
+  function lockCallAndApply() {
+    // 锁住 call
+    Object.defineProperty(Function.prototype, 'call', {
+      value: Function.prototype.call,
+      writable: false,
+      configurable: false,
+      enumerable: true
+    });
+    // 锁住 apply
+    Object.defineProperty(Function.prototype, 'apply', {
+      value: Function.prototype.apply,
+      writable: false,
+      configurable: false,
+      enumerable: true
+    });
+  }
+
+  /**
    * 重定向iframe hijack（页面被iframe包裹）
    */
   function redirectionIframeHijack() {
+    var flag = 'iframe_hijack_redirected';
     // 当前页面存在于一个 iframe 中
+    // 此处需要建立一个白名单匹配规则，白名单默认放行
     if (self != top) {
       var url = location.href;
       var parts = url.split('#');
@@ -250,6 +279,7 @@
       }
       try {
         console.log('页面被嵌入iframe中:', url);
+        hijackReport('页面被嵌入iframe中', url);
         top.location = parts.join('#');
       } catch (e) {}
     }
@@ -264,10 +294,11 @@
   function hijackReport(name, value){
     var img = document.createElement('img'),
       hijackName = name,
-      hijackValue = value.toString();
+      hijackValue = value.toString(),
+      curDate = new Date().getTime();
 
     // 上报
-    img.src = 'http://172.19.99.179:3002/report/?msg='+hijackName+'&value='+hijackValue;
+    img.src = 'http://172.19.99.179:3002/report/?msg='+hijackName+'&value='+hijackValue+'&time='+curDate;
   }
 
   // 待完成：
