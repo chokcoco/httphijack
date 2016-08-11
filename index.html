@@ -34,8 +34,8 @@
 <div class="container">
 	<div id='btn-inline-click' class="btn" onclick="alert('xss')">此按钮被注入恶意内联click事件</div>
 	<div id='btn-inline-click2' class="btn cf" onclick="alert('123')">此按钮被注入非恶意内联click事件</div>
-	<a id='btn-inline-click' class="btn" href="javascript:alert('xss')">此a标签href被注入javascript:恶意代码</a>
-	<a id='btn-inline-click2' class="btn cf" href="javascript:alert('123')">此a标签href被注入javascript:非恶意代码</a>
+	<a id='a-inline-href' class="btn" href="javascript:alert('xss')">此a标签href被注入javascript:恶意代码</a>
+	<a id='a-inline-href2' class="btn cf" href="javascript:alert('123')">此a标签href被注入javascript:非恶意代码</a>
 	<div id='btn-append-xss-js' class="btn">动态添加可疑脚本文件</div>
 	<div id='btn-append-normal-js' class="btn">动态添加正常脚本文件</div>
 	<div id='btn-document-write' class="btn">使用document-write添加XSS内容</div>
