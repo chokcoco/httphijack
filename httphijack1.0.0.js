@@ -6,22 +6,22 @@
  * @description 使用Javascript实现前端防御http劫持及防御XSS攻击，并且对可疑攻击进行上报
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
  *
- * 1、使用方法：调用 httphijack.init()
- *
- * 2、建立自己的黑白名单、上报系统及接收后端
- *
- * 3、防范范围：
- *    1）所有内联事件执行的代码
- *    2）href 属性 javascript: 内嵌的代码
- *    3）静态脚本文件内容
- *    4）动态添加的脚本文件内容
- *    5）document-write添加的内容
- *    6）iframe嵌套
+1、使用方法：调用 httphijack.init()
+
+2、建立自己的黑白名单、上报系统及接收后端
+
+3、防范范围：
+   1）所有内联事件执行的代码
+   2）href 属性 javascript: 内嵌的代码
+   3）静态脚本文件内容
+   4）动态添加的脚本文件内容
+   5）document-write添加的内容
+   6）iframe嵌套
  *
  */
 (function(window, undifined) {
 
-  var httphijack = function(){},
+  var httphijack = function() {},
     // 记录内联事件是否被扫描过的 hash map
     mCheckMap = {},
     // 记录内联事件是否被扫描过的id
@@ -121,13 +121,13 @@
         for (var i = 0; i < nodes.length; i++) {
           var node = nodes[i];
           if (/xss/i.test(node.src) || /xss/i.test(node.innerHTML)) {
-            try{
+            try {
               node.parentNode.removeChild(node);
-            }catch(e){
+            } catch (e) {
               var isRemove = 1;
             }
             // 上报
-            if(!isRemove){
+            if (!isRemove) {
               console.log('拦截可疑静态脚本:', node);
               hijackReport('拦截可疑静态脚本', node.src);
             }
@@ -173,7 +173,7 @@
   function resetDocumentWrite(window) {
     var old_write = window.document.write;
 
-    window.document.write = function(string){
+    window.document.write = function(string) {
       if (/xss/i.test(string)) {
         console.log('拦截可疑模块:', string);
         hijackReport('拦截可疑document-write', string);
@@ -211,7 +211,8 @@
   }
 
   /**
-   * 使用 DOMNodeInserted 对生成的 iframe 页面进行监控，防止调用内部原生 setAttribute
+   * 使用 DOMNodeInserted 对生成的 iframe 页面进行监控，
+   * 防止调用内部原生 setAttribute 及 document.write
    * @return {[type]} [description]
    */
   function defenseIframe() {
@@ -291,14 +292,14 @@
    * @param  {[String]} value [拦截值]
    * @return {[type]}   [description]
    */
-  function hijackReport(name, value){
+  function hijackReport(name, value) {
     var img = document.createElement('img'),
       hijackName = name,
       hijackValue = value.toString(),
       curDate = new Date().getTime();
 
     // 上报
-    img.src = 'http://172.19.99.179:3002/report/?msg='+hijackName+'&value='+hijackValue+'&time='+curDate;
+    img.src = 'http://172.19.99.179:3002/report/?msg=' + hijackName + '&value=' + hijackValue + '&time=' + curDate;
   }
 
   // 待完成：
