@@ -27,6 +27,24 @@
     // 记录内联事件是否被扫描过的id
     mCheckID = 0;
 
+  // 建立白名单
+  var whiteList = [
+    'www.yy.com',
+    'res.cont.yy.com'
+  ];
+
+  // 建立黑名单
+  var blackList = [
+    '192.168.1.0'
+  ]
+
+  // 建立正则拦截关键词
+  var keywords = [
+    'xss',
+    'BAIDU_SSP__wrapper',
+    'BAIDU_DSPUI_FLOWBAR'
+  ]
+
   /**
    * 内联事件拦截
    * @param  {[String]} eventName [内联事件名]
@@ -271,6 +289,22 @@
     // 当前页面存在于一个 iframe 中
     // 此处需要建立一个白名单匹配规则，白名单默认放行
     if (self != top) {
+      var
+        // 使用 document.referrer 可以拿到跨域 iframe 父页面的 URL
+        parentUrl = document.referrer,
+        length = whiteList.length,
+        i = 0;
+
+      for(; i<length; i++){
+        // 建立白名单正则
+        var reg = new RegExp(whiteList[i],'i');
+
+        // 存在白名单中，放行
+        if(reg.test(parentUrl)){
+          return;
+        }
+      }
+
       var url = location.href;
       var parts = url.split('#');
       if (location.search) {
@@ -279,9 +313,9 @@
         parts[0] += '?' + flag + '=1';
       }
       try {
-        console.log('页面被嵌入iframe中:', url);
-        hijackReport('页面被嵌入iframe中', url);
-        top.location = parts.join('#');
+        console.log('页面被嵌入iframe中:', parentUrl);
+        hijackReport('页面被嵌入iframe中', parentUrl);
+        top.location.href = parts.join('#');
       } catch (e) {}
     }
   }
@@ -324,3 +358,4 @@
 
   window.httphijack = httphijack;
 })(window);
+
