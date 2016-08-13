@@ -36,14 +36,14 @@
   // 建立黑名单
   var blackList = [
     '192.168.1.0'
-  ]
+  ];
 
   // 建立正则拦截关键词
   var keywords = [
     'xss',
     'BAIDU_SSP__wrapper',
     'BAIDU_DSPUI_FLOWBAR'
-  ]
+  ];
 
   /**
    * 内联事件拦截
@@ -136,6 +136,7 @@
       mutations.forEach(function(mutation) {
         // 返回被添加的节点,或者为null.
         var nodes = mutation.addedNodes;
+
         for (var i = 0; i < nodes.length; i++) {
           var node = nodes[i];
           if (/xss/i.test(node.src) || /xss/i.test(node.innerHTML)) {
