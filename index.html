@@ -68,6 +68,7 @@
 		document.write('XSS hijack');
 	});
 </script>
-<script type="text/javascript" src="./xss/a.js"></script>
+<!-- <script type="text/javascript" src="./xss/a.js"></script> -->
+<iframe srcdoc="<p>XSS Hijack!</p>" src="http://www.baidu.com"></iframe>
 </body>
 </html>

@@ -130,6 +130,9 @@
    * @return {[type]} [description]
    */
   function interceptionStaticScript() {
+    // MutationObserver 的不同兼容性写法
+    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+
     // 该构造函数用来实例化一个新的 Mutation 观察者对象
     // Mutation 观察者对象能监听在某个范围内的 DOM 树变化
     var observer = new MutationObserver(function(mutations) {
@@ -137,18 +140,34 @@
         // 返回被添加的节点,或者为null.
         var nodes = mutation.addedNodes;
 
+        // 逐个遍历
         for (var i = 0; i < nodes.length; i++) {
           var node = nodes[i];
-          if (/xss/i.test(node.src) || /xss/i.test(node.innerHTML)) {
-            try {
-              node.parentNode.removeChild(node);
-            } catch (e) {
-              var isRemove = 1;
-            }
-            // 上报
-            if (!isRemove) {
-              console.log('拦截可疑静态脚本:', node);
-              hijackReport('拦截可疑静态脚本', node.src);
+
+          // 扫描 script 与 iframe
+          if (node.tagName === 'SCRIPT' || node.tagName === 'IFRAME') {
+
+            // 拦截到可疑iframe
+            if(node.tagName === 'IFRAME' && node.srcdoc) {
+                node.parentNode.removeChild(node);
+                console.log('拦截到可疑iframe',node.srcdoc);
+                hijackReport('拦截可疑静态脚本', node.srcdoc);
+
+            }else if(node.src){
+              // 此处只放行白名单
+              if(/xss/i.test(node.src) || /xss/i.test(node.innerHTML)) {
+                try {
+                  node.parentNode.removeChild(node);
+                } catch (e) {
+                  var isRemove = 1;
+                }
+
+                // 上报
+                if (!isRemove) {
+                  console.log('拦截可疑静态脚本:', node.src);
+                  hijackReport('拦截可疑静态脚本', node.src);
+                }
+              }
             }
           }
         }
@@ -165,7 +184,7 @@
   }
 
   /**
-   * 使用 DOMNodeInserted  进行动态脚本拦截监测
+   * 使用 DOMNodeInserted  进行动态脚本拦截监
    * 此处无法拦截，只能监测
    * @return {[type]} [description]
    */
@@ -291,17 +310,17 @@
     // 此处需要建立一个白名单匹配规则，白名单默认放行
     if (self != top) {
       var
-        // 使用 document.referrer 可以拿到跨域 iframe 父页面的 URL
+      // 使用 document.referrer 可以拿到跨域 iframe 父页面的 URL
         parentUrl = document.referrer,
         length = whiteList.length,
         i = 0;
 
-      for(; i<length; i++){
+      for (; i < length; i++) {
         // 建立白名单正则
-        var reg = new RegExp(whiteList[i],'i');
+        var reg = new RegExp(whiteList[i], 'i');
 
         // 存在白名单中，放行
-        if(reg.test(parentUrl)){
+        if (reg.test(parentUrl)) {
           return;
         }
       }
@@ -359,4 +378,3 @@
 
   window.httphijack = httphijack;
 })(window);
-
