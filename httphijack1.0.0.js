@@ -154,7 +154,7 @@
                 hijackReport('拦截可疑静态脚本', node.srcdoc);
 
             }else if(node.src){
-              // 此处只放行白名单
+              // 此处应添加白名单，只放行白名单
               if(/xss/i.test(node.src) || /xss/i.test(node.innerHTML)) {
                 try {
                   node.parentNode.removeChild(node);
