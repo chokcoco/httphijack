@@ -9,10 +9,10 @@ httphijack.init()
 ## 防范范围：
 + 所有内联事件执行的代码
 + <a> 标签 href 属性 `javascript:` 内嵌的代码
-+ 静态脚本文件内容
-+ 动态添加的脚本文件内容
++ 静态脚本、iframe 等恶意内容
++ 动态添加的脚本文件、iframe 等恶意内容
 + document-write添加的内容
-+ iframe嵌套
++ iframe 嵌套
    
 ## 使用须知 
 建立自己的黑白名单、上报系统及接收后端
