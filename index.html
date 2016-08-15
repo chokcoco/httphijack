@@ -32,13 +32,25 @@
 </style>
 <body>
 <div class="container">
-	<div id='btn-inline-click' class="btn" onclick="alert('xss')">此按钮被注入恶意内联click事件</div>
-	<div id='btn-inline-click2' class="btn cf" onclick="alert('123')">此按钮被注入非恶意内联click事件</div>
-	<a id='a-inline-href' class="btn" href="javascript:alert('xss')">此a标签href被注入javascript:恶意代码</a>
-	<a id='a-inline-href2' class="btn cf" href="javascript:alert('123')">此a标签href被注入javascript:非恶意代码</a>
-	<div id='btn-append-xss-js' class="btn">动态添加可疑脚本文件</div>
-	<div id='btn-append-normal-js' class="btn">动态添加正常脚本文件</div>
-	<div id='btn-document-write' class="btn">使用document-write添加XSS内容</div>
+	<div class="group cf">
+		<div id='btn-inline-click' class="btn" onclick="alert('xss')">此按钮被注入恶意内联click事件</div>
+		<div id='btn-inline-click2' class="btn cf" onclick="alert('123')">此按钮被注入非恶意内联click事件</div>
+	</div>
+
+	<div class="group cf">
+		<a id='a-inline-href' class="btn" href="javascript:alert('xss')">此a标签href被注入javascript:恶意代码</a>
+		<a id='a-inline-href2' class="btn cf" href="javascript:alert('123')">此a标签href被注入javascript:非恶意代码</a>
+	</div>
+
+	<div class="group cf">
+		<div id='btn-append-xss-js' class="btn">动态添加可疑脚本文件</div>
+		<div id='btn-append-normal-js' class="btn">动态添加正常脚本文件</div>
+	</div>
+
+	<div class="group cf">
+		<div id='btn-setAttribute' class="btn">使用setAttribute添加XSS内容</div>
+		<div id='btn-document-write' class="btn">使用document-write添加XSS内容</div>
+	</div>
 </div>
 
 <script type="text/javascript" src='./httphijack1.0.0.js'></script>
@@ -67,8 +79,17 @@
 	document.getElementById('btn-document-write').addEventListener('click', function(){
 		document.write('XSS hijack');
 	});
+
+		// 动态添加正常脚本文件
+	document.getElementById('btn-setAttribute').addEventListener('click', function(){
+		var script = document.createElement('script');
+		script.setAttribute('type', 'text/javascript');
+		script.setAttribute('src', 'http://www.example.com/xss/c.js');
+
+		document.getElementsByTagName('body')[0].appendChild(script);
+	});
 </script>
-<!-- <script type="text/javascript" src="./xss/a.js"></script> -->
-<iframe srcdoc="<p>XSS Hijack!</p>" src="http://www.baidu.com"></iframe>
+<script type="text/javascript" src="./xss/a.js"></script>
+<!-- <iframe srcdoc="<p>XSS Hijack!</p>" src="http://www.baidu.com"></iframe> -->
 </body>
 </html>

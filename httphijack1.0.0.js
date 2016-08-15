@@ -29,8 +29,8 @@
 
   // 建立白名单
   var whiteList = [
-    'www.yy.com',
-    'res.cont.yy.com'
+    'www.aaa.com',
+    'www.bbb.com'
   ];
 
   // 建立黑名单
@@ -38,8 +38,8 @@
     '192.168.1.0'
   ];
 
-  // 建立正则拦截关键词
-  var keywords = [
+  // 建立关键词黑名单
+  var keywordBlackList = [
     'xss',
     'BAIDU_SSP__wrapper',
     'BAIDU_DSPUI_FLOWBAR'
@@ -146,27 +146,20 @@
 
           // 扫描 script 与 iframe
           if (node.tagName === 'SCRIPT' || node.tagName === 'IFRAME') {
-
             // 拦截到可疑iframe
-            if(node.tagName === 'IFRAME' && node.srcdoc) {
-                node.parentNode.removeChild(node);
-                console.log('拦截到可疑iframe',node.srcdoc);
-                hijackReport('拦截可疑静态脚本', node.srcdoc);
+            if (node.tagName === 'IFRAME' && node.srcdoc) {
+              node.parentNode.removeChild(node);
+              console.log('拦截到可疑iframe', node.srcdoc);
+              hijackReport('拦截可疑静态脚本', node.srcdoc);
 
-            }else if(node.src){
-              // 此处应添加白名单，只放行白名单
-              if(/xss/i.test(node.src) || /xss/i.test(node.innerHTML)) {
-                try {
-                  node.parentNode.removeChild(node);
-                } catch (e) {
-                  var isRemove = 1;
-                }
+            } else if (node.src) {
+              // 只放行白名单
+              if (!whileListMatch(blackList, node.src)) {
+                node.parentNode.removeChild(node);
 
                 // 上报
-                if (!isRemove) {
-                  console.log('拦截可疑静态脚本:', node.src);
-                  hijackReport('拦截可疑静态脚本', node.src);
-                }
+                console.log('拦截可疑静态脚本:', node.src);
+                hijackReport('拦截可疑静态脚本', node.src);
               }
             }
           }
@@ -176,7 +169,7 @@
 
     // 传入目标节点和观察选项
     // 如果 target 为 document 或者 document.documentElement
-    // 则当前文档中所有的节点添加与删除操作都会被观察到
+    // 则当前文档中所有的节点添加与删除操作都会被观察到d
     observer.observe(document, {
       subtree: true,
       childList: true
@@ -212,7 +205,7 @@
     var old_write = window.document.write;
 
     window.document.write = function(string) {
-      if (/xss/i.test(string)) {
+      if (blackListMatch(keywordBlackList, string)) {
         console.log('拦截可疑模块:', string);
         hijackReport('拦截可疑document-write', string);
         return;
@@ -237,47 +230,66 @@
 
       // 额外细节实现
       if (this.tagName == 'SCRIPT' && /^src$/i.test(name)) {
-        if (/xss/i.test(value)) {
+
+        if (!whileListMatch(whiteList, value)) {
           console.log('拦截可疑模块:', value);
-          hijackReport('拦截可疑setAttribute', string);
+          hijackReport('拦截可疑setAttribute', value);
           return;
         }
       }
+
       // 调用原始接口
       old_setAttribute.apply(this, arguments);
     };
   }
 
   /**
-   * 使用 DOMNodeInserted 对生成的 iframe 页面进行监控，
+   * 使用 MutationObserver 对生成的 iframe 页面进行监控，
    * 防止调用内部原生 setAttribute 及 document.write
    * @return {[type]} [description]
    */
   function defenseIframe() {
-    /**
-     * 实现单个 window 窗口的 setAttribute保护
-     * @param  {[BOM]} window [浏览器window对象]
-     * @return {[type]}       [description]
-     */
-    function installHook(window) {
-      // 重写单个 window 窗口的 setAttribute 属性
-      resetSetAttribute(window);
-      // 重写单个 window 窗口的 document.Write 属性
-      resetDocumentWrite(window);
-
-      // 监控当前环境的元素
-      window.document.addEventListener('DOMNodeInserted', function(e) {
-        var element = e.target;
-
-        // 给框架里环境也装个钩子
-        if (element.tagName == 'IFRAME') {
-          installHook(element.contentWindow);
-        }
-      }, true);
-    }
-
     // 先保护当前页面
     installHook(window);
+  }
+
+  /**
+   * 实现单个 window 窗口的 setAttribute保护
+   * @param  {[BOM]} window [浏览器window对象]
+   * @return {[type]}       [description]
+   */
+  function installHook(window) {
+    // 重写单个 window 窗口的 setAttribute 属性
+    resetSetAttribute(window);
+    // 重写单个 window 窗口的 document.Write 属性
+    resetDocumentWrite(window);
+
+    // MutationObserver 的不同兼容性写法
+    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+
+    // 该构造函数用来实例化一个新的 Mutation 观察者对象
+    // Mutation 观察者对象能监听在某个范围内的 DOM 树变化
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        // 返回被添加的节点,或者为null.
+        var nodes = mutation.addedNodes;
+
+        // 逐个遍历
+        for (var i = 0; i < nodes.length; i++) {
+          var node = nodes[i];
+
+          // 给生成的 iframe 里环境也装上重写的钩子
+          if (node.tagName == 'IFRAME') {
+            installHook(node.contentWindow);
+          }
+        }
+      });
+    });
+
+    observer.observe(document, {
+      subtree: true,
+      childList: true
+    });
   }
 
   /**
@@ -288,7 +300,9 @@
     // 锁住 call
     Object.defineProperty(Function.prototype, 'call', {
       value: Function.prototype.call,
+      // 当且仅当仅当该属性的 writable 为 true 时，该属性才能被赋值运算符改变
       writable: false,
+      // 当且仅当该属性的 configurable 为 true 时，该属性才能够被改变，也能够被删除
       configurable: false,
       enumerable: true
     });
@@ -353,7 +367,51 @@
       curDate = new Date().getTime();
 
     // 上报
-    img.src = 'http://172.19.99.179:3002/report/?msg=' + hijackName + '&value=' + hijackValue + '&time=' + curDate;
+    img.src = 'http://www.reportServer.com/report/?msg=' + hijackName + '&value=' + hijackValue + '&time=' + curDate;
+  }
+
+  /**
+   * [白名单匹配]
+   * @param  {[Array]} whileList [白名单]
+   * @param  {[String]} value    [需要验证的字符串]
+   * @return {[Boolean]}         [false -- 验证不通过，true -- 验证通过]
+   */
+  function whileListMatch(whileList, value) {
+    var length = whileList.length,
+      i = 0;
+
+    for (; i < length; i++) {
+      // 建立白名单正则
+      var reg = new RegExp(whiteList[i], 'i');
+
+      // 存在白名单中，放行
+      if (reg.test(value)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * [黑名单匹配]
+   * @param  {[Array]} blackList [黑名单]
+   * @param  {[String]} value    [需要验证的字符串]
+   * @return {[Boolean]}         [false -- 验证不通过，true -- 验证通过]
+   */
+  function blackListMatch(blackList, value) {
+    var length = blackList.length,
+      i = 0;
+
+    for (; i < length; i++) {
+      // 建立黑名单正则
+      var reg = new RegExp(whiteList[i], 'i');
+
+      // 存在黑名单中，拦截
+      if (reg.test(value)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // 待完成：
@@ -367,7 +425,7 @@
     // 进行静态脚本拦截
     interceptionStaticScript();
     // 进行动态脚本拦截
-    interceptionDynamicScript();
+    // interceptionDynamicScript();
     // 锁住 apply 和 call
     lockCallAndApply();
     // 对当前窗口及多重内嵌 iframe 进行 setAttribute | document.write 重写
@@ -378,3 +436,5 @@
 
   window.httphijack = httphijack;
 })(window);
+
+
