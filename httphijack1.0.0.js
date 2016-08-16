@@ -45,73 +45,6 @@
     'BAIDU_DSPUI_FLOWBAR'
   ];
 
-  /**
-   * 内联事件拦截
-   * @param  {[String]} eventName [内联事件名]
-   * @param  {[Number]} eventID   [内联事件id]
-   * @return {[type]}             [description]
-   */
-  function interceptionInlineEvent(eventName, eventID) {
-    var isClick = (eventName == 'onclick');
-    /**
-     * 扫描元素是否存在内联事件
-     * @param  {[DOM]} el [DOM元素]
-     */
-    function scanElement(el) {
-      var
-        flag = el['isScan'],
-        // 扫描内联代码
-        code = "",
-        hash = 0;
-
-      // 跳过已扫描的事件
-      if (!flag) {
-        flag = el['isScan'] = ++mCheckID;
-      }
-
-      hash = (flag << 8) | eventID;
-
-      if (hash in mCheckMap) {
-        return;
-      }
-
-      mCheckMap[hash] = true;
-
-      // 非元素节点
-      if (el.nodeType != Node.ELEMENT_NODE) {
-        return;
-      }
-
-      if (el[eventName]) {
-        code = el.getAttribute(eventName);
-        if (code && /xss/i.test(code)) {
-          // 注销事件
-          el[eventName] = null;
-          console.log('拦截可疑内联事件:' + code);
-          hijackReport('拦截可疑内联事件', code);
-        }
-      }
-
-      // 扫描 <a href="javascript:"> 的脚本
-      if (isClick && el.tagName == 'A' && el.protocol == 'javascript:') {
-        var code = el.href.substr(11);
-        if (/xss/i.test(code)) {
-          // 注销代码
-          el.href = 'javascript:void(0)';
-          console.log('拦截可疑事件:' + code);
-          hijackReport('拦截可疑javascript:代码', code);
-        }
-      }
-
-      // 递归扫描上级元素
-      scanElement(el.parentNode);
-    }
-
-    document.addEventListener(eventName.substr(2), function(e) {
-      scanElement(e.target);
-    }, true);
-  }
-
   // 触发内联事件拦截
   function triggerIIE() {
     var i = 0,
@@ -122,6 +55,77 @@
         interceptionInlineEvent(obj, i++);
       }
     }
+  }
+
+  /**
+   * 内联事件拦截
+   * @param  {[String]} eventName [内联事件名]
+   * @param  {[Number]} eventID   [内联事件id]
+   * @return {[type]}             [description]
+   */
+  function interceptionInlineEvent(eventName, eventID) {
+    var isClick = (eventName == 'onclick');
+
+    document.addEventListener(eventName.substr(2), function(e) {
+      scanElement(e.target, isClick, eventName, eventID);
+    }, true);
+  }
+
+  /**
+   * 扫描元素是否存在内联事件
+   * @param  {[DOM]} elem [DOM元素]
+   * @param  {[Boolean]} isClick [是否是内联点击事件]
+   * @param  {[String]} eventName [内联 on* 事件名]
+   * @param  {[Number]} eventID [给每个内联 on* 事件一个id]
+   */
+  function scanElement(elem, isClick, eventName, eventID) {
+    var
+      flag = elem['isScan'],
+      // 扫描内联代码
+      code = "",
+      hash = 0;
+
+    // 跳过已扫描的事件
+    if (!flag) {
+      flag = elem['isScan'] = ++mCheckID;
+    }
+
+    hash = (flag << 8) | eventID;
+
+    if (hash in mCheckMap) {
+      return;
+    }
+
+    mCheckMap[hash] = true;
+
+    // 非元素节点
+    if (elem.nodeType != Node.ELEMENT_NODE) {
+      return;
+    }
+
+    if (elem[eventName]) {
+      code = elem.getAttribute(eventName);
+      if (code && blackListMatch(keywordBlackList, code)) {
+        // 注销事件
+        elem[eventName] = null;
+        console.log('拦截可疑内联事件:' + code);
+        hijackReport('拦截可疑内联事件', code);
+      }
+    }
+
+    // 扫描 <a href="javascript:"> 的脚本
+    if (isClick && elem.tagName == 'A' && elem.protocol == 'javascript:') {
+      var code = elem.href.substr(11);
+      if (blackListMatch(keywordBlackList, code)) {
+        // 注销代码
+        elem.href = 'javascript:void(0)';
+        console.log('拦截可疑事件:' + code);
+        hijackReport('拦截可疑javascript:代码', code);
+      }
+    }
+
+    // 递归扫描上级元素
+    scanElement(elem.parentNode);
   }
 
   // 主动防御 MutationEvent
@@ -156,7 +160,6 @@
               // 只放行白名单
               if (!whileListMatch(blackList, node.src)) {
                 node.parentNode.removeChild(node);
-
                 // 上报
                 console.log('拦截可疑静态脚本:', node.src);
                 hijackReport('拦截可疑静态脚本', node.src);
@@ -354,21 +357,21 @@
     }
   }
 
-  /**
-   * 自定义上报 -- 替换页面中的 console.log()
-   * @param  {[String]} name  [拦截类型]
-   * @param  {[String]} value [拦截值]
-   * @return {[type]}   [description]
-   */
-  function hijackReport(name, value) {
-    var img = document.createElement('img'),
-      hijackName = name,
-      hijackValue = value.toString(),
-      curDate = new Date().getTime();
+/**
+ * 自定义上报 -- 替换页面中的 console.log()
+ * @param  {[String]} name  [拦截类型]
+ * @param  {[String]} value [拦截值]
+ * @return {[type]}   [description]
+ */
+function hijackReport(name, value) {
+  var img = document.createElement('img'),
+    hijackName = name,
+    hijackValue = value.toString(),
+    curDate = new Date().getTime();
 
-    // 上报
-    img.src = 'http://www.reportServer.com/report/?msg=' + hijackName + '&value=' + hijackValue + '&time=' + curDate;
-  }
+  // 上报
+  img.src = 'http://www.reportServer.com/report/?msg=' + hijackName + '&value=' + hijackValue + '&time=' + curDate;
+}
 
   /**
    * [白名单匹配]
@@ -436,5 +439,7 @@
 
   window.httphijack = httphijack;
 })(window);
+
+
 
 
