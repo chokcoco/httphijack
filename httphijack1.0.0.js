@@ -30,7 +30,8 @@
   // 建立白名单
   var whiteList = [
     'www.aaa.com',
-    'www.bbb.com'
+    'www.bbb.com',
+    's4.cnzz.com'
   ];
 
   // 建立黑名单
@@ -116,7 +117,7 @@
     // 扫描 <a href="javascript:"> 的脚本
     if (isClick && elem.tagName == 'A' && elem.protocol == 'javascript:') {
       var code = elem.href.substr(11);
-      if (blackListMatch(keywordBlackList, code)) {
+      if (blackListMatch(keywordBlackList, string)) {
         // 注销代码
         elem.href = 'javascript:void(0)';
         console.log('拦截可疑事件:' + code);
@@ -357,21 +358,21 @@
     }
   }
 
-/**
- * 自定义上报 -- 替换页面中的 console.log()
- * @param  {[String]} name  [拦截类型]
- * @param  {[String]} value [拦截值]
- * @return {[type]}   [description]
- */
-function hijackReport(name, value) {
-  var img = document.createElement('img'),
-    hijackName = name,
-    hijackValue = value.toString(),
-    curDate = new Date().getTime();
+  /**
+   * 自定义上报 -- 替换页面中的 console.log()
+   * @param  {[String]} name  [拦截类型]
+   * @param  {[String]} value [拦截值]
+   * @return {[type]}   [description]
+   */
+  function hijackReport(name, value) {
+    var img = document.createElement('img'),
+      hijackName = name,
+      hijackValue = value.toString(),
+      curDate = new Date().getTime();
 
-  // 上报
-  img.src = 'http://www.reportServer.com/report/?msg=' + hijackName + '&value=' + hijackValue + '&time=' + curDate;
-}
+    // 上报
+    img.src = 'http://www.reportServer.com/report/?msg=' + hijackName + '&value=' + hijackValue + '&time=' + curDate;
+  }
 
   /**
    * [白名单匹配]
@@ -439,7 +440,3 @@ function hijackReport(name, value) {
 
   window.httphijack = httphijack;
 })(window);
-
-
-
-

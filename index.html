@@ -29,8 +29,17 @@
 	height: 0;
 	clear: both;
 }
+#cnzz_stat_icon_1259441963 {
+	display: block;
+	width: 0;
+	height: 0;
+	overflow: hidden;
+}
 </style>
 <body>
+<a style="width:149px;height:149px;position:fixed;top:0;right:0;z-index:9999;" href="https://github.com/chokcoco/css3-" target="_blank">
+  <img src="http://chokcoco.github.io/demo/curveJS/images/forkme.png">
+</a>
 <div class="container">
 	<div class="group cf">
 		<div id='btn-inline-click' class="btn" onclick="alert('xss')">此按钮被注入恶意内联click事件</div>
@@ -90,6 +99,7 @@
 	});
 </script>
 <script type="text/javascript" src="./xss/a.js"></script>
-<iframe srcdoc="<p>XSS Hijack!</p>" src="http://www.baidu.com"></iframe>
+<!-- <iframe srcdoc="<p>XSS Hijack!</p>" src="http://www.baidu.com"></iframe> -->
+<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1259441963'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s4.cnzz.com/z_stat.php%3Fid%3D1259441963' type='text/javascript'%3E%3C/script%3E"));</script>
 </body>
 </html>
