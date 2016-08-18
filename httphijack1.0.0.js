@@ -408,7 +408,7 @@
 
     for (; i < length; i++) {
       // 建立黑名单正则
-      var reg = new RegExp(whiteList[i], 'i');
+      var reg = new RegExp(blackList[i], 'i');
 
       // 存在黑名单中，拦截
       if (reg.test(value)) {
