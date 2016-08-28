@@ -16,7 +16,7 @@ httphijack.init()
 + 静态脚本、iframe 等恶意内容
 + 动态添加的脚本文件、iframe 等恶意内容
 + document-write添加的内容
-+ iframe 嵌套
++ 页面被 iframe 嵌套劫持 
    
 ## 使用须知 
 建立自己的域名白名单、关键字黑名单、上报系统及接收后端。
