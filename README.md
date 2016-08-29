@@ -12,7 +12,7 @@ httphijack.init()
 
 ## 防范范围：
 + 所有内联 on* 事件执行的代码
-+ <a> 标签 href 属性 `javascript:` 内嵌的代码
++ a标签 href 属性 `javascript:` 内嵌的代码
 + 静态脚本、iframe 等恶意内容
 + 动态添加的脚本文件、iframe 等恶意内容
 + document-write添加的内容
