@@ -1,5 +1,5 @@
 # httphijack
-使用 Javascript 实现前端防御`http劫持`及防御`XSS攻击`，并且对可疑攻击进行上报
+使用 Javascript 实现前端防御`http劫持`及防御`XSS攻击`，并且对可疑攻击进行上报。
 
 ## 相关文章
 [【前端安全】JavaScript防http劫持与XSS](http://www.cnblogs.com/coco1s/p/5777260.html)
