@@ -21,7 +21,7 @@ httphijack.init()
 ## 使用须知 
 建立自己的域名白名单、关键字黑名单、上报系统及接收后端。
 
-防御 XSS 及 http劫持，更多的还是得依靠 https 等非 JavaScript 技术，高明的攻击者可以绕过任何 JavaScript 防护。
+防御 `XSS` 及 `http劫持`，更多的还是得依靠 `https` 等非 `JavaScript` 技术，高明的攻击者可以绕过任何 `JavaScript` 防护。
 
 组件未在生产环境使用，使用了很多 HTML5 才支持的 API，仅供学习交流。
 
