@@ -159,7 +159,7 @@
 
             } else if (node.src) {
               // 只放行白名单
-              if (!whileListMatch(blackList, node.src)) {
+              if (!whileListMatch(whiteList, node.src)) {
                 node.parentNode.removeChild(node);
                 // 上报
                 console.log('拦截可疑静态脚本:', node.src);
