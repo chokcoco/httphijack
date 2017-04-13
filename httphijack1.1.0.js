@@ -454,7 +454,7 @@
             try {
                 if (!s__cookie.get('HtpLocTmp')) {
                     top.location.href = parts.join('#');
-                    //cookie记录这次跳转的时间点
+                    // cookie记录这次跳转的时间点
                     s__cookie.set('HtpLocTmp', '1');
                 }
                 hiidoStat('', '', '', parentUrl);
