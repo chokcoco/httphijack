@@ -371,7 +371,7 @@
       curDate = new Date().getTime();
 
     // 上报
-    img.src = 'http://www.reportServer.com/report/?msg=' + hijackName + '&value=' + hijackValue + '&time=' + curDate;
+    img.src = 'http://172.19.99.179:3002/report/?msg=' + hijackName + '&value=' + hijackValue + '&time=' + curDate;
   }
 
   /**
