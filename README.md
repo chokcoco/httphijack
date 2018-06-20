@@ -32,7 +32,7 @@
 
 防御 `XSS` 及 `http劫持`，更多的还是得依靠升级 `https` 和 `CSP/CSP2(内容安全策略)` 等非 `JavaScript` 技术，高明的攻击者可以绕过任何 `JavaScript` 防护。
 
-> 组件未在生产环境使用，使用了很多 HTML5 才支持的 API，仅供学习交流。
+> 1.0版本组件未在生产环境使用，使用了很多 HTML5 才支持的 API，仅供学习交流。
 
 ## License
 MIT
